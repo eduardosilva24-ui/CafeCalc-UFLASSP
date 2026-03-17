@@ -92,6 +92,12 @@ let passo = -1
 
 let dados = {}
 
+let vozesCarregadas = []
+
+speechSynthesis.onvoiceschanged = () => {
+vozesCarregadas = speechSynthesis.getVoices()
+}
+
 let perguntas = [
 
 "Quantas sacas de café você colheu?",
@@ -128,10 +134,18 @@ if(!('speechSynthesis' in window)) return
 
 speechSynthesis.cancel()
 
-let msg = new SpeechSynthesisUtterance(texto)
+let msg = new SpeechSynthesisUtterance()
 
+msg.text = texto
 msg.lang = "pt-BR"
-msg.rate = 0.95
+msg.rate = 0.9
+msg.pitch = 1
+
+let voz = vozesCarregadas.find(v => v.lang.includes("pt"))
+
+if(voz){
+msg.voice = voz
+}
 
 speechSynthesis.speak(msg)
 
@@ -148,8 +162,6 @@ precoCafe+
 
 document.getElementById("texto").innerText = texto
 
-falar(texto)
-
 }
 
 function proximaPergunta(){
@@ -164,9 +176,9 @@ return
 
 }
 
-document.getElementById("continuar").style.display = "none"
+document.getElementById("continuar").style.display="none"
 
-document.getElementById("mic").style.display = "block"
+document.getElementById("mic").style.display="block"
 
 let pergunta = perguntas[passo]
 
@@ -178,7 +190,13 @@ falar(pergunta)
 
 document.getElementById("continuar").onclick = function(){
 
+speechSynthesis.resume()
+
 if(passo === -1){
+
+let texto = document.getElementById("texto").innerText
+
+falar(texto)
 
 passo = -1
 
@@ -201,7 +219,7 @@ window.webkitSpeechRecognition
 if(!SpeechRecognition){
 
 document.getElementById("status").innerText =
-"Navegador não suporta microfone"
+"Navegador não suporta reconhecimento de voz"
 
 return
 
@@ -223,13 +241,19 @@ let numero = texto.replace(/\D/g,'')
 
 dados[campos[passo]] = Number(numero)
 
-document.getElementById("status").innerText="Resposta salva"
+document.getElementById("status").innerText="Resposta registrada"
 
 document.getElementById("mic").style.display="none"
 
 document.getElementById("continuar").style.display="inline-block"
 
-document.getElementById("texto").innerText="Resposta registrada. Clique continuar."
+document.getElementById("texto").innerText="Resposta salva. Clique continuar."
+
+}
+
+recognition.onerror = function(){
+
+document.getElementById("status").innerText="Erro ao usar microfone"
 
 }
 
@@ -260,7 +284,7 @@ lucro.toFixed(2)+
 "O preço mínimo da saca para não ter prejuízo é "+
 minimo.toFixed(2)+
 " reais. "+
-"Esses valores são aproximados."
+"Esses valores são apenas estimativas para ajudar na análise da produção."
 
 document.getElementById("texto").innerText = resultado
 
