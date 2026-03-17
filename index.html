@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>CafeCalc Rural</title>
 
 <style>
 
@@ -30,11 +33,12 @@ align-items:center;
 padding:40px;
 box-sizing:border-box;
 text-align:center;
+
 }
 
 .titulo{
 
-font-size:40px;
+font-size:42px;
 margin-bottom:40px;
 
 }
@@ -65,14 +69,14 @@ color:black;
 
 margin-top:60px;
 
-width:120px;
-height:120px;
+width:140px;
+height:140px;
 
 border-radius:50%;
 
 border:none;
 
-font-size:50px;
+font-size:60px;
 
 background:#2e7d32;
 color:white;
@@ -83,8 +87,8 @@ cursor:pointer;
 
 .status{
 
-margin-top:20px;
-font-size:22px;
+margin-top:30px;
+font-size:24px;
 
 }
 
@@ -98,9 +102,7 @@ font-size:22px;
 
 <div class="titulo">☕ CafeCalc Rural</div>
 
-<div id="texto" class="texto">
-Carregando valor do café...
-</div>
+<div id="texto" class="texto"></div>
 
 <button id="continuar" class="botao" style="display:none">
 Continuar
@@ -116,8 +118,10 @@ Continuar
 
 <script>
 
+let precoCafe = 1966
+
 let passo=0
-let precoCafe=0
+
 let recognition
 
 let dados={}
@@ -141,6 +145,7 @@ let perguntas=[
 ]
 
 let campos=[
+
 "sacas",
 "hectares",
 "mao",
@@ -148,6 +153,7 @@ let campos=[
 "agro",
 "trator",
 "transporte"
+
 ]
 
 function falar(texto,callback){
@@ -155,6 +161,8 @@ function falar(texto,callback){
 let msg=new SpeechSynthesisUtterance(texto)
 
 msg.lang="pt-BR"
+
+msg.rate=0.9
 
 msg.onend=function(){
 
@@ -166,14 +174,14 @@ speechSynthesis.speak(msg)
 
 }
 
-google.script.run.withSuccessHandler(function(preco){
-
-precoCafe=preco
+function iniciar(){
 
 let mensagem=
 
-"O preço médio da saca de café hoje é "+precoCafe+" reais. "+
-"Este assistente vai ajudar a calcular o lucro da sua safra."
+"O preço médio da saca de café hoje é "+
+precoCafe+
+" reais. "+
+"Este assistente vai ajudar você a calcular o lucro da sua safra."
 
 document.getElementById("texto").innerText=mensagem
 
@@ -183,7 +191,7 @@ document.getElementById("continuar").style.display="block"
 
 })
 
-}).pegarPrecoCafe()
+}
 
 document.getElementById("continuar").onclick=function(){
 
@@ -207,7 +215,7 @@ document.getElementById("status").innerText="Microfone ativado"
 
 }catch(e){
 
-document.getElementById("status").innerText="Microfone bloqueado pelo navegador"
+document.getElementById("status").innerText="Erro ao ativar microfone"
 
 }
 
@@ -236,7 +244,7 @@ window.webkitSpeechRecognition
 if(!SpeechRecognition){
 
 document.getElementById("status").innerText=
-"Navegador não suporta voz"
+"Navegador não suporta reconhecimento de voz"
 
 return
 
@@ -307,9 +315,12 @@ let minimo=custo/dados.sacas
 let texto=
 
 "Resultado aproximado da safra. "+
-"O lucro aproximado é "+lucro.toFixed(2)+" reais. "+
+"O lucro aproximado é "+
+lucro.toFixed(2)+
+" reais. "+
 "O preço mínimo da saca para não ter prejuízo é "+
-minimo.toFixed(2)+" reais."
+minimo.toFixed(2)+
+" reais."
 
 document.getElementById("texto").innerText=texto
 
@@ -317,7 +328,10 @@ falar(texto)
 
 }
 
+iniciar()
+
 </script>
 
 </body>
+
 </html>
