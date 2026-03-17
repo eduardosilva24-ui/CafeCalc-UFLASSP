@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#3e2723;
+color:white;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.app{
+
+width:100vw;
+height:100vh;
+
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+
+padding:40px;
+box-sizing:border-box;
+text-align:center;
+}
+
+.titulo{
+
+font-size:40px;
+margin-bottom:40px;
+
+}
+
+.texto{
+
+font-size:38px;
+max-width:900px;
+line-height:1.4;
+
+}
+
+.botao{
+
+margin-top:60px;
+padding:20px 40px;
+font-size:30px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+
+background:#ffca28;
+color:black;
+
+}
+
+.microfone{
+
+margin-top:60px;
+
+width:120px;
+height:120px;
+
+border-radius:50%;
+
+border:none;
+
+font-size:50px;
+
+background:#2e7d32;
+color:white;
+
+cursor:pointer;
+
+}
+
+.status{
+
+margin-top:20px;
+font-size:22px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="titulo">☕ CafeCalc Rural</div>
+
+<div id="texto" class="texto">
+Carregando valor do café...
+</div>
+
+<button id="continuar" class="botao" style="display:none">
+Continuar
+</button>
+
+<button id="mic" class="microfone" style="display:none">
+🎤
+</button>
+
+<div id="status" class="status"></div>
+
+</div>
+
+<script>
+
+let passo=0
+let precoCafe=0
+let recognition
+
+let dados={}
+
+let perguntas=[
+
+"Quantas sacas de café você colheu?",
+
+"Quantos hectares de café você tem?",
+
+"Quanto você gastou com mão de obra?",
+
+"Quanto você gastou com adubo?",
+
+"Quanto você gastou com agrotóxicos?",
+
+"Quanto você gastou com máquinas ou trator?",
+
+"Quanto você gastou com transporte?"
+
+]
+
+let campos=[
+"sacas",
+"hectares",
+"mao",
+"adubo",
+"agro",
+"trator",
+"transporte"
+]
+
+function falar(texto,callback){
+
+let msg=new SpeechSynthesisUtterance(texto)
+
+msg.lang="pt-BR"
+
+msg.onend=function(){
+
+if(callback)callback()
+
+}
+
+speechSynthesis.speak(msg)
+
+}
+
+google.script.run.withSuccessHandler(function(preco){
+
+precoCafe=preco
+
+let mensagem=
+
+"O preço médio da saca de café hoje é "+precoCafe+" reais. "+
+"Este assistente vai ajudar a calcular o lucro da sua safra."
+
+document.getElementById("texto").innerText=mensagem
+
+falar(mensagem,function(){
+
+document.getElementById("continuar").style.display="block"
+
+})
+
+}).pegarPrecoCafe()
+
+document.getElementById("continuar").onclick=function(){
+
+if(passo==0){
+
+ativarMicrofone()
+
+}
+
+mostrarPergunta()
+
+}
+
+async function ativarMicrofone(){
+
+try{
+
+await navigator.mediaDevices.getUserMedia({audio:true})
+
+document.getElementById("status").innerText="Microfone ativado"
+
+}catch(e){
+
+document.getElementById("status").innerText="Microfone bloqueado pelo navegador"
+
+}
+
+}
+
+function mostrarPergunta(){
+
+document.getElementById("continuar").style.display="none"
+
+document.getElementById("mic").style.display="block"
+
+let pergunta=perguntas[passo]
+
+document.getElementById("texto").innerText=pergunta
+
+falar(pergunta)
+
+}
+
+document.getElementById("mic").onclick=function(){
+
+let SpeechRecognition=
+window.SpeechRecognition||
+window.webkitSpeechRecognition
+
+if(!SpeechRecognition){
+
+document.getElementById("status").innerText=
+"Navegador não suporta voz"
+
+return
+
+}
+
+recognition=new SpeechRecognition()
+
+recognition.lang="pt-BR"
+
+recognition.start()
+
+document.getElementById("status").innerText="🎤 Ouvindo..."
+
+recognition.onresult=function(e){
+
+let texto=e.results[0][0].transcript
+
+let numero=texto.replace(/\D/g,'')
+
+dados[campos[passo]]=Number(numero)
+
+document.getElementById("status").innerText="Resposta registrada"
+
+passo++
+
+document.getElementById("mic").style.display="none"
+
+if(passo<perguntas.length){
+
+document.getElementById("texto").innerText=
+"Resposta salva. Clique continuar."
+
+document.getElementById("continuar").style.display="block"
+
+}else{
+
+calcular()
+
+}
+
+}
+
+recognition.onerror=function(){
+
+document.getElementById("status").innerText=
+"Erro ao usar microfone"
+
+}
+
+}
+
+function calcular(){
+
+let custo=
+
+dados.mao+
+dados.adubo+
+dados.agro+
+dados.trator+
+dados.transporte
+
+let receita=dados.sacas*precoCafe
+
+let lucro=receita-custo
+
+let minimo=custo/dados.sacas
+
+let texto=
+
+"Resultado aproximado da safra. "+
+"O lucro aproximado é "+lucro.toFixed(2)+" reais. "+
+"O preço mínimo da saca para não ter prejuízo é "+
+minimo.toFixed(2)+" reais."
+
+document.getElementById("texto").innerText=texto
+
+falar(texto)
+
+}
+
+</script>
+
+</body>
+</html>
